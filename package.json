@@ -5,10 +5,11 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start" : "nodemon server"
+    "start": "nodemon server"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.3"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
