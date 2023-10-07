@@ -5,9 +5,12 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "nodemon server"
+    "client": "npm start --prefix client",
+    "server": "nodemon server --ignore client",
+    "start": "concurrently --kill-others-on-fail \"npm run server\" \"npm run client\""
   },
   "devDependencies": {
+    "concurrently": "^8.2.1",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.3"
   },
