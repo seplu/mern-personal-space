@@ -1,59 +1,37 @@
 import React, { useReducer, useContext } from "react";
 import reducer from "./reducer";
 
-import {
-  BsCalendar3,
-  BsCarFrontFill,
-  BsCashCoin,
-  BsFillHeartPulseFill,
-  BsHouse,
-  BsListCheck,
-  BsPerson,
-} from "react-icons/bs";
-
 const initialState = {
   menuData: [
     {
-      title: "Home",
-      url: "#",
-      cName: "nav-links active",
-      icon: <BsHouse />,
-    },
-    {
       title: "Car",
-      url: "#",
-      cName: "nav-links",
-      icon: <BsCarFrontFill />,
+      url: "/car",
+      index: "link-1",
     },
     {
       title: "Finance",
-      url: "#",
-      cName: "nav-links",
-      icon: <BsCashCoin />,
+      url: "/finance",
+      index: "link-2",
     },
     {
       title: "Health",
-      url: "#",
-      cName: "nav-links",
-      icon: <BsFillHeartPulseFill />,
+      url: "/health",
+      index: "link-3",
     },
     {
       title: "Calendar",
-      url: "#",
-      cName: "nav-links",
-      icon: <BsCalendar3 />,
+      url: "/calendar",
+      index: "link-4",
     },
     {
       title: "Tasks",
-      url: "#",
-      cName: "nav-links",
-      icon: <BsListCheck />,
+      url: "/tasks",
+      index: "link-5",
     },
     {
       title: "Profile",
-      url: "#",
-      cName: "nav-links",
-      icon: <BsPerson />,
+      url: "/profile",
+      index: "link-6",
     },
   ],
 };
