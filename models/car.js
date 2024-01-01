@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 
 const CarSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
     brand: {
       type: String,
       required: true,
@@ -13,29 +9,50 @@ const CarSchema = new mongoose.Schema(
     color: {
       type: String,
     },
-    cost: {
+    fuelAVG: {
       type: Number,
-    },
-    year: {
-      type: Number,
-    },
-    power: {
-      type: Number,
+      maxLength: 4,
+      default: 0,
     },
     fuelType: {
       type: String,
-    },
-    fuelAVG: {
-      type: Number,
-    },
-    mileage: {
-      type: Number,
+      enum: ["Gasoline", "Diesel", "Hybrid", "Electric"],
     },
     inspectionDate: {
       type: Date,
     },
     insuranceDate: {
       type: Date,
+    },
+    licensePlate: {
+      type: String,
+    },
+    mileage: {
+      type: Number,
+      maxLength: 7,
+      default: 0,
+    },
+    model: {
+      type: String,
+      required: true,
+    },
+    name: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+    power: {
+      type: Number,
+      maxLength: 4,
+      default: 0,
+    },
+    year: {
+      type: Number,
+      maxLength: 4,
+      default: 0,
+    },
+    vin: {
+      type: String,
     },
     createdAt: {
       type: Date,
