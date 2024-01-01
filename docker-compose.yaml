@@ -1,0 +1,37 @@
+version: "3.8"
+services:
+  mongo:
+    container_name: mongo
+    env_file:
+      - ./docker_env/mongo.env
+    image: mongo
+    networks:
+      - "ps_net"
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongodb:/data/db
+      - mongodb-dump:/dump
+  mongo-express:
+    container_name: mongo-express
+    env_file:
+      - ./docker_env/mongo_express.env
+    image: mongo-express
+    networks:
+      - "ps_net"
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  ps_net:
+
+volumes:
+  mongodb:
+  mongodb-dump:
