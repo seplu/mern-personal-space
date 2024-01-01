@@ -11,7 +11,7 @@ You can do this as follows (type in mongosh).
 
 ```shell
 use admin
-db.auth("mongoadmin", passwordPrompt())
+db.auth("mongouser", passwordPrompt())
 
 use dbname
 
