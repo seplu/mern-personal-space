@@ -8,6 +8,7 @@ dotenv.config();
 
 // DB
 import connectDB from "./db/connect.js";
+// Routes
 import carRoutes from "./routes/carRoutes.js";
 // Middleware
 import errorHandlerMiddleware from "./middleware/error-handler.js";
