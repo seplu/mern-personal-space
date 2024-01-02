@@ -1,21 +1,26 @@
-const app = require("./app");
-const mongoose = require("mongoose");
-const morgan = require("morgan");
+import dotenv from "dotenv";
+import express from "express";
+import morgan from "morgan";
 
-require("dotenv").config();
+const app = express();
+dotenv.config();
 
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
 
+app.get("/", (req, res) => {
+  res.send("Personal Space Welcome");
+});
+
 const port = process.env.PORT || 5100;
 
-mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => {
-    console.log("MongoDB connected");
+const start = async () => {
+  try {
     app.listen(port, () => console.log(`Server is listening on port ${port}`));
-  })
-  .catch((error) => {
+  } catch (error) {
     console.log(error);
-  });
+  }
+};
+
+start().then(() => console.log("Server is started"));
