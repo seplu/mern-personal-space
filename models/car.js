@@ -8,6 +8,7 @@ const CarSchema = new mongoose.Schema(
     },
     color: {
       type: String,
+      default: "",
     },
     fuelAVG: {
       type: Number,
@@ -16,16 +17,20 @@ const CarSchema = new mongoose.Schema(
     },
     fuelType: {
       type: String,
-      enum: ["Gasoline", "Diesel", "Hybrid", "Electric"],
+      enum: ["Gasoline", "Diesel", "Hybrid", "Electric", "none"],
+      default: "none",
     },
     inspectionDate: {
       type: Date,
+      default: Date.now,
     },
     insuranceDate: {
       type: Date,
+      default: Date.now,
     },
     licensePlate: {
       type: String,
+      default: "",
     },
     mileage: {
       type: Number,
@@ -53,6 +58,7 @@ const CarSchema = new mongoose.Schema(
     },
     vin: {
       type: String,
+      default: "",
     },
     createdAt: {
       type: Date,

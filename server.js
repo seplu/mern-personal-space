@@ -8,6 +8,7 @@ dotenv.config();
 
 // DB
 import connectDB from "./db/connect.js";
+import carRoutes from "./routes/carRoutes.js";
 // Middleware
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 
@@ -21,6 +22,8 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Personal Space Welcome");
 });
+app.use("/api/v1/car", carRoutes);
+
 // Middleware Usage
 app.use(errorHandlerMiddleware);
 
