@@ -4,7 +4,7 @@ const CarSchema = new mongoose.Schema(
   {
     brand: {
       type: String,
-      required: true,
+      required: [true, "Please enter a brand"],
     },
     color: {
       type: String,
@@ -34,12 +34,12 @@ const CarSchema = new mongoose.Schema(
     },
     model: {
       type: String,
-      required: true,
+      required: [true, "Please enter a model"],
     },
     name: {
       type: String,
       unique: true,
-      required: true,
+      required: [true, "Please enter a name"],
     },
     power: {
       type: Number,
