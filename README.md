@@ -2,7 +2,7 @@
 Application for tracking information about your finance, car and many more.
 
 ## ENV file
-`MONGO_URL` - set custom MongoDB URL
+`MONGO_URL` - set custom MongoDB URL  
 `PORT` - set custom port for Back-End
 
 ## Prepare MongoDB
