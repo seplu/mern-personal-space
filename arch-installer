@@ -101,6 +101,10 @@ FDE="no"
 fi
 clear
 
+### Crypt Password
+CRYPTPWD=$(dialog --stdout --passwordbox "Enter Crypt Password" 0 0)
+clear
+
 ## ROOT Size
 
 
@@ -143,7 +147,7 @@ sgdisk -n 3:0:"$ENDSECTOR" -c 3:"Linux LVM" -t 3:8309 "${TARGETDISK}"
 echo "SGDISK DONE"
 
 ### Full-Disk Encryption
-cryptsetup luksformat --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
+echo "${CRYPTPWD}" | cryptsetup luksformat -q --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
 cryptsetup open ${TARGETDISK}p3 cryptlvm
 pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
