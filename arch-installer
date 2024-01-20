@@ -140,7 +140,7 @@ sgdisk -n 1:2048:4095 -c 1:"BIOS Boot Partition" -t 1:ef02 "${TARGETDISK}"
 sgdisk -n 2:4096:+550M -c 2:"EFI System Partition" -t 2:ef00 "${TARGETDISK}"
 ENDSECTOR=$(sgdisk -E "${TARGETDISK}")
 sgdisk -n 3:0:"$ENDSECTOR" -c 3:"Linux LVM" -t 3:8309 "${TARGETDISK}"
-sgdisk -p "$1"
+sgdisk -p "${TARGETDISK}"
 
 ### Full-Disk Encryption
 cryptsetup luksformat --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
