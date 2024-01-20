@@ -159,14 +159,19 @@ lvcreate -l 100%FREE vg -n home
 ### Formatting
 mkfs.ext4 /dev/vg/root
 mkfs.ext4 /dev/vg/home
+mkswap /dev/vg/swap
+
+mount /dev/vg/root /mnt
+mkdir /mnt/home
+mount /dev/vg/home /mnt/home
 swapon /dev/vg/swap
 
 mkfs.fat -F32 ${TARGETDISK}p2
 mkdir /mnt/efi
-mount /dev/${TARGETDISK}p2 /mnt/efi
+mount ${TARGETDISK}p2 /mnt/efi
 
 ### Installation
-pacstrap -K /mnt base linux linux-firmware mkinitcpio lvm2 dhcpd wpa_supplicant
+pacstrap -K /mnt base linux linux-firmware mkinitcpio lvm2 nano dhcpcd wpa_supplicant
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
