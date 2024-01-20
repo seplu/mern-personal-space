@@ -147,14 +147,14 @@ sgdisk -n 3:0:"$ENDSECTOR" -c 3:"Linux LVM" -t 3:8309 "${TARGETDISK}"
 echo "SGDISK DONE"
 
 ### Full-Disk Encryption
-echo "${CRYPTPWD}" | cryptsetup luksformat -q --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
+echo "${CRYPTPWD}" | cryptsetup luksFormat -q --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
 cryptsetup open ${TARGETDISK}p3 cryptlvm
 pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
 
 lvcreate -L ${SWAP}M vg -n swap
 lvcreate -L 100G vg -n root
-lvcreate -L 100%FREE vg -n home
+lvcreate -l 100%FREE vg -n home
 
 ### Formatting
 mkfs.ext4 /dev/vg/root
