@@ -175,9 +175,19 @@ pacstrap -K /mnt base linux linux-firmware mkinitcpio lvm2 nano dhcpcd wpa_suppl
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
-arch-chroot /mnt
+arch-chroot /mnt /bin/bash <<END
+ln -sf /usr/share/zoneinfo/Europe/Warsaw /etc/localtime
+hwclock --systohc
+cp /etc/locale.gen /etc/locale.gen.ori
+sed -i '/#en_US.UTF-8/s/^#//g' /etc/locale.gen
+locale-gen
+echo ${HOSTNAME} > /etc/hostname
 
-echo "TBD"
+cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bck
+sed -i "s|^HOOKS=.*|HOOKS=(base udev autodetect keyboard modconf block encrypt lvm2 filesystems fsck)|g" /etc/mkinitcpio.conf
+sed -i "s|^FILES=.*|FILES=(/root/secrets/crypto_keyfile.bin)|g" /etc/mkinitcpio.conf
+
+END
 
 ### Cleanup
 rm ~/.dialogrc
