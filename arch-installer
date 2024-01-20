@@ -1,0 +1,174 @@
+#!/bin/bash
+
+# Disable silent errors and prevents errors from being masked
+set -uo pipefail
+
+### Install needed packages
+pacman -Sy --noconfirm pacman-contrib dialog
+
+### Setup Dialog
+cat > ~/.dialogrc <<EOT
+aspect = 0
+separate_widget = ""
+tab_len = 0
+visit_items = OFF
+use_shadow = OFF
+use_colors = ON
+screen_color = (WHITE,DEFAULT,OFF)
+shadow_color = (WHITE,BLACK,OFF)
+dialog_color = (WHITE,BLACK,OFF)
+title_color = (GREEN,BLACK,OFF)
+border_color = (WHITE,BLACK,OFF)
+border2_color = (WHITE,BLACK,OFF)
+button_active_color = (BLACK,YELLOW,OFF)
+button_inactive_color = (WHITE,BLACK,OFF)
+button_key_active_color = (BLACK,GREEN,OFF)
+button_key_inactive_color = (RED,BLACK,OFF)
+button_label_active_color = (BLACK,YELLOW,OFF)
+button_label_inactive_color = (WHITE,BLACK,OFF)
+inputbox_color = (WHITE,BLACK,OFF)
+inputbox_border_color = (BLACK,BLACK,OFF)
+searchbox_color = (WHITE,BLACK,OFF)
+searchbox_title_color = (GREEN,BLACK,OFF)
+searchbox_border_color = (WHITE,BLACK,OFF)
+position_indicator_color = (GREEN,BLACK,OFF)
+menubox_color = (BLACK,BLACK,OFF)
+menubox_border_color = (BLACK,BLACK,OFF)
+menubox_border2_color = (BLACK,BLACK,OFF)
+item_color = (WHITE,BLACK,OFF)
+item_selected_color = (BLACK,GREEN,OFF)
+tag_color = (BLUE,BLACK,OFF)
+tag_selected_color = (BLACK,GREEN,OFF)
+tag_key_color = (YELLOW,BLACK,OFF)
+tag_key_selected_color = (BLACK,GREEN,OFF)
+check_color = (WHITE,BLACK,OFF)
+check_selected_color = (BLACK,GREEN,OFF)
+uarrow_color = (GREEN,BLACK,OFF)
+darrow_color = (GREEN,BLACK,OFF)
+itemhelp_color = (BLACK,WHITE,OFF)
+form_active_text_color = (BLACK,BLUE,OFF)
+form_text_color = (WHITE,BLACK,OFF)
+form_item_readonly_color = (BLACK,WHITE,OFF)
+EOT
+
+### Welcome screen
+WELCOME=$(dialog --stdout --title "Arch installer" --msgbox "\
+
+Hi,
+
+Welcome in the Arch Linux Installer.
+This script will help you installing Arch Linux.
+
+-----------------------------------------------------
+ It will erase all of your data on the selected disk
+-----------------------------------------------------
+
+@seplu, 2024" 20 57)
+clear
+
+### Get information from user
+## User
+USER=$(dialog --stdout --inputbox "Enter admin username" 0 0) || exit 1
+clear
+: ${USER:?"User cannot be empty"}
+
+## Password
+PASSWORD=$(dialog --stdout --passwordbox "Enter admin password" 0 0) || exit 1
+clear
+: ${PASSWORD:?"password cannot be empty"}
+PASSWORD2=$(dialog --stdout --passwordbox "Enter admin password again" 0 0) || exit 1
+clear
+[[ "$PASSWORD" == "$PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
+
+## Hostname
+HOSTNAME=$(dialog --stdout --inputbox "Enter hostname" 0 0) || exit 1
+clear
+: ${HOSTNAME:?"hostname cannot be empty"}
+
+## Target disk
+DISKLIST=$(lsblk -dplnx size -o name,size | grep -Ev "boot|rpmb|loop" | tac)
+TARGETDISK=$(dialog --stdout --menu "Select target disk" 0 0 0 ${DISKLIST}) || exit 1
+clear
+
+## Full-disk encryption
+FDED=$(dialog --stdout --yesno "Enable Full-Disk Encyption - LVM on Luks?" 0 0)
+FDESTATUS=$?
+if [ $FDESTATUS = 0 ]
+then
+FDE="yes"
+else
+FDE="no"
+fi
+clear
+
+## ROOT Size
+
+
+## Swap
+TOTALMEM=$(free -k | awk '/:/ {print $2}' | head -n 1)
+if [ $TOTALMEM -lt 2048555 ]
+then
+SWAPCALC=$(((totalmem * 2)/1024))
+elif [[ $TOTALMEM -gt 2048555 && $TOTALMEM -lt 8194206 ]]
+then
+SWAPCALC=$(($TOTALMEM / 1024))
+else
+SWAPCALC=8192
+fi
+SWAP=$(dialog --stdout --inputbox "Enter Swap size" 0 0 ${SWAPCALC}) || exit 1
+clear
+
+### Print summary from user
+echo "------------"
+echo "Information:"
+echo "User: $USER"
+echo "Hostname: $HOSTNAME"
+echo "Target disk: $TARGETDISK"
+echo "Full-Disk Encryption: $FDE"
+echo "SWAP Calculation: $SWAPCALC"
+echo "SWAP: $SWAP"
+
+### Logging
+exec 1> >(tee "stdout.log")
+exec 2> >(tee "stderr.log")
+
+timedatectl set-ntp true
+
+### Setup disk
+sgdisk -og "${TARGETDISK}"
+sgdisk -n 1:2048:4095 -c 1:"BIOS Boot Partition" -t 1:ef02 "${TARGETDISK}"
+sgdisk -n 2:4096:+550M -c 2:"EFI System Partition" -t 2:ef00 "${TARGETDISK}"
+ENDSECTOR=$(sgdisk -E "${TARGETDISK}")
+sgdisk -n 3:0:"$ENDSECTOR" -c 3:"Linux LVM" -t 3:8309 "${TARGETDISK}"
+sgdisk -p "$1"
+
+### Full-Disk Encryption
+cryptsetup luksformat --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
+cryptsetup open ${TARGETDISK}p3 cryptlvm
+pvcreate /dev/mapper/cryptlvm
+vgcreate vg /dev/mapper/cryptlvm
+
+lvcreate -L ${SWAP}M vg -n swap
+lvcreate -L 100G vg -n root
+lvcreate -L 100%FREE vg -n home
+
+### Formatting
+mkfs.ext4 /dev/vg/root
+mkfs.ext4 /dev/vg/home
+swapon /dev/vg/swap
+
+mkfs.fat -F32 ${TARGETDISK}p2
+mkdir /mnt/efi
+mount /dev/${TARGETDISK}p2 /mnt/efi
+
+### Installation
+pacstrap -K /mnt base linux linux-firmware mkinitcpio lvm2 dhcpd wpa_supplicant
+
+genfstab -U /mnt >> /mnt/etc/fstab
+
+arch-chroot /mnt
+
+echo "TBD"
+
+### Cleanup
+rm ~/.dialogrc
