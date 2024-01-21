@@ -68,17 +68,21 @@ clear
 
 ### Get information from user
 ## User
-USER=$(dialog --stdout --inputbox "Enter admin username" 0 0) || exit 1
+USER=$(dialog --stdout --inputbox "Enter username" 0 0) || exit 1
 clear
 : ${USER:?"User cannot be empty"}
 
 ## Password
-PASSWORD=$(dialog --stdout --passwordbox "Enter admin password" 0 0) || exit 1
+PASSWORD=$(dialog --stdout --passwordbox "Enter user password" 0 0) || exit 1
 clear
 : ${PASSWORD:?"password cannot be empty"}
 PASSWORD2=$(dialog --stdout --passwordbox "Enter admin password again" 0 0) || exit 1
 clear
 [[ "$PASSWORD" == "$PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
+
+### Root Password
+ROOTPWD=$(dialog --stdout --passwordbox "Enter Root Password" 0 0)
+clear
 
 ## Hostname
 HOSTNAME=$(dialog --stdout --inputbox "Enter hostname" 0 0) || exit 1
@@ -148,7 +152,7 @@ echo "SGDISK DONE"
 
 ### Full-Disk Encryption
 echo "${CRYPTPWD}" | cryptsetup luksFormat -q --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
-cryptsetup open ${TARGETDISK}p3 cryptlvm
+echo "${CRYPTPWD}" | cryptsetup open ${TARGETDISK}p3 cryptlvm
 pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
 
@@ -187,7 +191,32 @@ cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bck
 sed -i "s|^HOOKS=.*|HOOKS=(base udev autodetect keyboard modconf block encrypt lvm2 filesystems fsck)|g" /etc/mkinitcpio.conf
 sed -i "s|^FILES=.*|FILES=(/root/secrets/crypto_keyfile.bin)|g" /etc/mkinitcpio.conf
 
+echo -en "${ROOTPWD}\n${ROOTPWD}" | passwd
+
+pacman -S grub
+
+cp /etc/default/grub /etc/default/grub.bck
+sed -i '/GRUB_ENABLE_CRYPTODISK/s/^#//g' /etc/default/grub
+BLKID=$(blkid | grep sda3 | cut -d '"' -f 2)
+GRUBCMD="\"cryptdevice=UUID=$BLKID:cryptlvm root=/dev/vg/root cryptkey=rootfs:/root/secrets/crypto_keyfile.bin random.trust_cpu=on\""
+sed -i "s|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX=${GRUBCMD}|g" /etc/default/grub
+
+pacman -S efibootmgr
+grub-install --target=x86_64-efi --efi-directory=/efi
+
+pacman -S intel-ucode
+
+mkdir /root/secrets && chmod 700 /root/secrets
+head -c 64 /dev/urandom > /root/secrets/crypto_keyfile.bin && chmod 600 /root/secrets/crypto_keyfile.bin
+cryptsetup -v luksAddKey -i 1 /dev/nvme0n1p3 /root/secrets/crypto_keyfile.bin
+
+mkinitcpio -p linux
+grub-mkconfig -o /boot/grub/grub.cfg
+
+exit
 END
 
 ### Cleanup
 rm ~/.dialogrc
+
+echo "DONE"
