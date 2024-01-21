@@ -76,13 +76,17 @@ clear
 PASSWORD=$(dialog --stdout --passwordbox "Enter user password" 0 0) || exit 1
 clear
 : ${PASSWORD:?"password cannot be empty"}
-PASSWORD2=$(dialog --stdout --passwordbox "Enter admin password again" 0 0) || exit 1
+PASSWORD2=$(dialog --stdout --passwordbox "Enter user password again" 0 0) || exit 1
 clear
 [[ "$PASSWORD" == "$PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
 
-### Root Password
+## Root Password
 ROOTPWD=$(dialog --stdout --passwordbox "Enter Root Password" 0 0)
 clear
+: ${ROOTPWD:?"password cannot be empty"}
+ROOTPWD2=$(dialog --stdout --passwordbox "Enter Root password again" 0 0) || exit 1
+clear
+[[ "$ROOTPWD" == "$ROOTPWD2" ]] || ( echo "Passwords did not match"; exit 1; )
 
 ## Hostname
 HOSTNAME=$(dialog --stdout --inputbox "Enter hostname" 0 0) || exit 1
@@ -105,12 +109,13 @@ FDE="no"
 fi
 clear
 
-### Crypt Password
+## Crypt Password
 CRYPTPWD=$(dialog --stdout --passwordbox "Enter Crypt Password" 0 0)
 clear
 
 ## ROOT Size
-
+ROOTSIZE=$(dialog --stdout --inputbox "Enter Root partition size in GB" 0 0 100 )
+clear
 
 ## Swap
 TOTALMEM=$(free -k | awk '/:/ {print $2}' | head -n 1)
@@ -126,6 +131,12 @@ fi
 SWAP=$(dialog --stdout --inputbox "Enter Swap size" 0 0 ${SWAPCALC}) || exit 1
 clear
 
+## Desktop Environment
+DELIST=(kde
+none)
+DE=$(dialog --stdout --menu "Select window manager" 0 0 0 ${DELIST})
+clear
+
 ### Print summary from user
 echo "------------"
 echo "Information:"
@@ -133,9 +144,10 @@ echo "User: $USER"
 echo "Hostname: $HOSTNAME"
 echo "Target disk: $TARGETDISK"
 echo "Full-Disk Encryption: $FDE"
+echo "Root Partition Size (GB): $ROOTSIZE"
 echo "SWAP Calculation: $SWAPCALC"
 echo "SWAP: $SWAP"
-
+echo "------------"
 ### Logging
 exec 1> >(tee "stdout.log")
 exec 2> >(tee "stderr.log")
@@ -157,7 +169,7 @@ pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
 
 lvcreate -L ${SWAP}M vg -n swap
-lvcreate -L 100G vg -n root
+lvcreate -L ${ROOTSIZE} vg -n root
 lvcreate -l 100%FREE vg -n home
 
 ### Formatting
@@ -274,6 +286,19 @@ END
 echo "grub mkconfig"
 arch-chroot /mnt /bin/bash <<END
 grub-mkconfig -o /boot/grub/grub.cfg
+END
+echo "create user"
+arch-chroot /mnt /bin/bash <<END
+useradd -m ${USER} -p ${PASSWORD}
+END
+echo "Install KDE"
+arch-chroot /mnt /bin/bash <<END
+echo y | pacman -Sy xorg plasma plasma-wayland-session kde-applications 
+END
+echo "Enable services"
+arch-chroot /mnt /bin/bash <<END
+systemctl enable sddm.service
+systemctl enable NetworkManager.service
 END
 echo "CHROOT DONE"
 exit
