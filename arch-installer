@@ -223,7 +223,7 @@ echo -en "${ROOTPWD}\n${ROOTPWD}" | passwd
 END
 echo "Grub installation"
 arch-chroot /mnt /bin/bash <<END
-pacman -Sy grub
+echo y | pacman -Sy grub
 END
 echo "Grub bck"
 arch-chroot /mnt /bin/bash <<END
@@ -241,7 +241,7 @@ sed -i "s|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX=${GRUBCMD}|g" /etc/default/g
 END
 echo "EfiBootMGR Install"
 arch-chroot /mnt /bin/bash <<END
-pacman -Sy efibootmgr
+echo y | pacman -Sy efibootmgr
 END
 echo "Grub install EFI"
 arch-chroot /mnt /bin/bash <<END
@@ -249,7 +249,7 @@ grub-install --target=x86_64-efi --efi-directory=/efi
 END
 echo "Intel UCode"
 arch-chroot /mnt /bin/bash <<END
-pacman -Sy intel-ucode
+echo y | pacman -Sy intel-ucode
 END
 echo "Secrets"
 arch-chroot /mnt /bin/bash <<END
