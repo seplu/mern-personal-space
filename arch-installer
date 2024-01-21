@@ -132,7 +132,7 @@ SWAP=$(dialog --stdout --inputbox "Enter Swap size" 0 0 ${SWAPCALC}) || exit 1
 clear
 
 ## Desktop Environment
-DE=$(dialog --stdout --menu "Select window manager" 0 0 0 "KDE" "None")
+DE=$(dialog --stdout --menu "Select window manager" 0 0 0 1 "KDE" 2 "None")
 clear
 
 ### Print summary from user
@@ -167,7 +167,7 @@ pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
 
 lvcreate -L ${SWAP}M vg -n swap
-lvcreate -L ${ROOTSIZE} vg -n root
+lvcreate -L ${ROOTSIZE}G vg -n root
 lvcreate -l 100%FREE vg -n home
 
 ### Formatting
