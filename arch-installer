@@ -193,38 +193,86 @@ echo "Locale"
 arch-chroot /mnt /bin/bash <<END
 cp /etc/locale.gen /etc/locale.gen.ori
 END
-arch-chroot /mnt /bin/bash << sed -i '/#en_US.UTF-8/s/^#//g' /etc/locale.gen
-arch-chroot /mnt /bin/bash << locale-gen
-arch-chroot /mnt /bin/bash << echo ${HOSTNAME} > /etc/hostname
-
-arch-chroot /mnt /bin/bash << cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bck
-arch-chroot /mnt /bin/bash << sed -i "s|^HOOKS=.*|HOOKS=(base udev autodetect keyboard modconf block encrypt lvm2 filesystems fsck)|g" /etc/mkinitcpio.conf
-arch-chroot /mnt /bin/bash << sed -i "s|^FILES=.*|FILES=(/root/secrets/crypto_keyfile.bin)|g" /etc/mkinitcpio.conf
-
-arch-chroot /mnt /bin/bash << echo -en "${ROOTPWD}\n${ROOTPWD}" | passwd
-
-arch-chroot /mnt /bin/bash << pacman -S grub
-
-arch-chroot /mnt /bin/bash << cp /etc/default/grub /etc/default/grub.bck
-arch-chroot /mnt /bin/bash << sed -i '/GRUB_ENABLE_CRYPTODISK/s/^#//g' /etc/default/grub
-arch-chroot /mnt /bin/bash << BLKID=$(blkid | grep ${TARGETDISK}p3 | cut -d '"' -f 2)
-arch-chroot /mnt /bin/bash << GRUBCMD="\"cryptdevice=UUID=$BLKID:cryptlvm root=/dev/vg/root cryptkey=rootfs:/root/secrets/crypto_keyfile.bin random.trust_cpu=on\""
-arch-chroot /mnt /bin/bash << sed -i "s|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX=${GRUBCMD}|g" /etc/default/grub
-
-arch-chroot /mnt /bin/bash << pacman -S efibootmgr
-arch-chroot /mnt /bin/bash << grub-install --target=x86_64-efi --efi-directory=/efi
-
-arch-chroot /mnt /bin/bash << pacman -S intel-ucode
-
-arch-chroot /mnt /bin/bash << mkdir /root/secrets && chmod 700 /root/secrets
-arch-chroot /mnt /bin/bash << head -c 64 /dev/urandom > /root/secrets/crypto_keyfile.bin && chmod 600 /root/secrets/crypto_keyfile.bin
-arch-chroot /mnt /bin/bash << cryptsetup -v luksAddKey -i 1 /dev/nvme0n1p3 /root/secrets/crypto_keyfile.bin
-
-arch-chroot /mnt /bin/bash << mkinitcpio -p linux
-arch-chroot /mnt /bin/bash << grub-mkconfig -o /boot/grub/grub.cfg
-
-exit
+echo "Locale 2"
+arch-chroot /mnt /bin/bash <<END
+sed -i '/#en_US.UTF-8/s/^#//g' /etc/locale.gen
 END
+echo "Locale gen"
+arch-chroot /mnt /bin/bash <<END
+locale-gen
+END
+echo "Hostname"
+arch-chroot /mnt /bin/bash <<END
+echo ${HOSTNAME} > /etc/hostname
+END
+echo "mkinit bck"
+arch-chroot /mnt /bin/bash <<END
+cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bck
+END
+echo "mkinit hooks"
+arch-chroot /mnt /bin/bash <<END
+sed -i "s|^HOOKS=.*|HOOKS=(base udev autodetect keyboard modconf block encrypt lvm2 filesystems fsck)|g" /etc/mkinitcpio.conf
+END
+echo "mkinit files"
+arch-chroot /mnt /bin/bash <<END
+sed -i "s|^FILES=.*|FILES=(/root/secrets/crypto_keyfile.bin)|g" /etc/mkinitcpio.conf
+END
+echo "Root pwd"
+arch-chroot /mnt /bin/bash <<END
+echo -en "${ROOTPWD}\n${ROOTPWD}" | passwd
+END
+echo "Grub installation"
+arch-chroot /mnt /bin/bash <<END
+pacman -S grub
+END
+echo "Grub bck"
+arch-chroot /mnt /bin/bash <<END
+cp /etc/default/grub /etc/default/grub.bck
+END
+echo "Grub Enable Crypto"
+arch-chroot /mnt /bin/bash <<END
+sed -i '/GRUB_ENABLE_CRYPTODISK/s/^#//g' /etc/default/grub
+END
+echo "Grub CMD"
+arch-chroot /mnt /bin/bash <<END
+BLKID=$(blkid | grep ${TARGETDISK}p3 | cut -d '"' -f 2)
+GRUBCMD="\"cryptdevice=UUID=$BLKID:cryptlvm root=/dev/vg/root cryptkey=rootfs:/root/secrets/crypto_keyfile.bin random.trust_cpu=on\""
+sed -i "s|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX=${GRUBCMD}|g" /etc/default/grub
+END
+echo "EfiBootMGR Install"
+arch-chroot /mnt /bin/bash <<END
+pacman -S efibootmgr
+END
+echo "Grub install EFI"
+arch-chroot /mnt /bin/bash <<END
+grub-install --target=x86_64-efi --efi-directory=/efi
+END
+echo "Intel UCode"
+arch-chroot /mnt /bin/bash <<END
+pacman -S intel-ucode
+END
+echo "Secrets"
+arch-chroot /mnt /bin/bash <<END
+mkdir /root/secrets && chmod 700 /root/secrets
+END
+echo "KeyFile"
+arch-chroot /mnt /bin/bash <<END
+head -c 64 /dev/urandom > /root/secrets/crypto_keyfile.bin && chmod 600 /root/secrets/crypto_keyfile.bin
+END
+echo "AddKey"
+arch-chroot /mnt /bin/bash <<END
+cryptsetup -v luksAddKey -i 1 /dev/nvme0n1p3 /root/secrets/crypto_keyfile.bin
+END
+echo "mkinit linux"
+arch-chroot /mnt /bin/bash <<END
+mkinitcpio -p linux
+END
+echo "grub mkconfig"
+arch-chroot /mnt /bin/bash <<END
+grub-mkconfig -o /boot/grub/grub.cfg
+END
+echo "CHROOT DONE"
+exit
 
 ### Cleanup
 rm ~/.dialogrc
