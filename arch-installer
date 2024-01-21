@@ -151,7 +151,7 @@ sgdisk -n 3:0:"$ENDSECTOR" -c 3:"Linux LVM" -t 3:8309 "${TARGETDISK}"
 echo "SGDISK DONE"
 
 ### Full-Disk Encryption
-echo "${CRYPTPWD}" | cryptsetup luksFormat -q --type luks1 --use-random -S 1 -s 512 -h sha512 -i 5000 ${TARGETDISK}p3
+echo "${CRYPTPWD}" | cryptsetup luksFormat -q --type luks1 --use-urandom -S 0 -s 512 -h sha512 -i 2000 ${TARGETDISK}p3
 echo "${CRYPTPWD}" | cryptsetup open ${TARGETDISK}p3 cryptlvm
 pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
@@ -220,6 +220,11 @@ END
 echo "Root pwd"
 arch-chroot /mnt /bin/bash <<END
 echo -en "${ROOTPWD}\n${ROOTPWD}" | passwd
+END
+echo "haveged installation"
+arch-chroot /mnt /bin/bash <<END
+echo y | pacman -Sy haveged
+systemctl enable haveged.service
 END
 echo "Grub installation"
 arch-chroot /mnt /bin/bash <<END
