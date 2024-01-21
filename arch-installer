@@ -181,9 +181,18 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 echo "ARCH-CHROOT"
 #arch-chroot /mnt /bin/bash <<END
-arch-chroot /mnt /bin/bash << ln -sf /usr/share/zoneinfo/Europe/Warsaw /etc/localtime
-arch-chroot /mnt /bin/bash << hwclock --systohc
-arch-chroot /mnt /bin/bash << cp /etc/locale.gen /etc/locale.gen.ori
+echo "localtime"
+arch-chroot /mnt /bin/bash <<END
+ln -sf /usr/share/zoneinfo/Europe/Warsaw /etc/localtime
+END
+echo "hwclock"
+arch-chroot /mnt /bin/bash <<END
+hwclock --systohc
+END
+echo "Locale"
+arch-chroot /mnt /bin/bash <<END
+cp /etc/locale.gen /etc/locale.gen.ori
+END
 arch-chroot /mnt /bin/bash << sed -i '/#en_US.UTF-8/s/^#//g' /etc/locale.gen
 arch-chroot /mnt /bin/bash << locale-gen
 arch-chroot /mnt /bin/bash << echo ${HOSTNAME} > /etc/hostname
