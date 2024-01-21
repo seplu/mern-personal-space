@@ -223,7 +223,7 @@ echo -en "${ROOTPWD}\n${ROOTPWD}" | passwd
 END
 echo "Grub installation"
 arch-chroot /mnt /bin/bash <<END
-pacman -S grub
+pacman -Sy grub
 END
 echo "Grub bck"
 arch-chroot /mnt /bin/bash <<END
@@ -235,13 +235,13 @@ sed -i '/GRUB_ENABLE_CRYPTODISK/s/^#//g' /etc/default/grub
 END
 echo "Grub CMD"
 arch-chroot /mnt /bin/bash <<END
-BLKID=$(blkid | grep ${TARGETDISK}p3 | cut -d '"' -f 2)
+BLKID=$(blkid | grep p3 | cut -d '"' -f 2)
 GRUBCMD="\"cryptdevice=UUID=$BLKID:cryptlvm root=/dev/vg/root cryptkey=rootfs:/root/secrets/crypto_keyfile.bin random.trust_cpu=on\""
 sed -i "s|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX=${GRUBCMD}|g" /etc/default/grub
 END
 echo "EfiBootMGR Install"
 arch-chroot /mnt /bin/bash <<END
-pacman -S efibootmgr
+pacman -Sy efibootmgr
 END
 echo "Grub install EFI"
 arch-chroot /mnt /bin/bash <<END
@@ -249,7 +249,7 @@ grub-install --target=x86_64-efi --efi-directory=/efi
 END
 echo "Intel UCode"
 arch-chroot /mnt /bin/bash <<END
-pacman -S intel-ucode
+pacman -Sy intel-ucode
 END
 echo "Secrets"
 arch-chroot /mnt /bin/bash <<END
